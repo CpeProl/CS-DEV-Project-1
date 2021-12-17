@@ -15,17 +15,75 @@ class canvaSP():
         self.width = width
         self.height = height
         self.canv = tk.Canvas(self.mw, height = self.height, width = self.width)
+        self.canv.bind('<KeyPress>',self.KeyPress)
+        self.canv.bind('<KeyRelease>',self.KeyRelease)
+        self.canv.focus_set()
         self.canv.pack()
 
-        self.player = Vaisseau(self.canv, 500,500,10,10, vx0 = 0.1, vy0 = 0.1)
+        self.player = Vaisseau(self.canv, 500,500,10,10, vx0 = 0, vy0 = 0)
         self.aliens = []
         self.murs = []
         self.projectiles = []
+
+        
 
         self.currentLevel = 0
         self.levels = ['level1']
         self.loadLevel()
         self.Collision()
+
+    def KeyPress(self,event):
+        (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
+        touche = event.keysym
+        if touche == 'Left':
+            #if x0 <= 0:
+                #self.player.vx = 0
+            #else:    
+            self.player.vx = -0.2
+        if touche == 'Right':
+            self.player.vx = 0.2
+        if touche == 'Up':
+            self.player.vy = -0.2
+        if touche == 'Down':
+            self.player.vy = 0.2
+        # if touche == 'Left':
+        #     self.player.vx = -0.2
+        # if touche == 'Right':
+        #     self.player.vx = 0.2
+        # if touche == 'Up':
+        #     self.player.vy = -0.2
+        # if touche == 'Down':
+        #     self.player.vy = 0.2
+
+        # (x0,y0,x1,y1) = self.canvas.coords(self.obj)
+        # dx,dy = self.vx * PERIOD, self.vy * PERIOD
+        # x02,y02 = x0 + dx, y0 + dy
+        # x12,y12 = x1 + dx, y1 + dy
+        # # Limit left movement to the screen
+        # if dx > x02:
+        #     dx = x02
+        # # Limit right movement to the screen
+        # if dx > WIDTH-x12 :
+        #     dx = WIDTH-x12
+        # # Limit top movement to the screen
+        # if dy > y02:
+        #     dy = y02
+        # # Limit bottom movement to the screen
+        # if dy > HEIGHT-y12:
+        #     dy = WIDTH-y12
+        # self.Move(dx, dy)
+
+    def KeyRelease(self,event):
+        touche = event.keysym
+        print(touche)
+        if touche == 'Left':
+            self.player.vx = 0
+        if touche == 'Right':
+            self.player.vx = 0
+        if touche == 'Up':
+            self.player.vy = 0
+        if touche == 'Down':
+            self.player.vy = 0
 
     def loadLevel(self):
     # TO DO : open...
@@ -74,7 +132,7 @@ class canvaSP():
         # Limit player movement to the screen
 
         # Limit left movement to the screen
-        if x0 < 0 :
+        if x0 < 0:
             self.player.Move(abs(x0),0)
         # Limit right movement to the screen
         if x1 > WIDTH :
@@ -109,8 +167,21 @@ class Vaisseau():
         self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  fill = "maroon")
 
     def updatePositionOnCanvas(self):
-        self.Move( self.vx * PERIOD, self.vy * PERIOD)
-
+        (x0,y0,x1,y1) = self.canvas.coords(self.obj)
+        dx,dy = self.vx * PERIOD, self.vy * PERIOD
+        # Limit left movement to the screen
+        if dx<0 and x0 + dx < 0:
+            dx = -x0
+        # Limit right movement to the screen
+        if dx>0 and x1 +dx > WIDTH :
+            dx = WIDTH -x1
+        # Limit top movement to the screen
+        if dy<0 and y0 + dy < 0:
+            dy = -y0
+        # Limit bottom movement to the screen
+        if dy>0 and y1 + dy > HEIGHT:
+            dy = HEIGHT -y1
+        self.Move(dx, dy)
 
     def Move(self,x,y):
         self.canvas.move(self.obj, x, y)
