@@ -1,10 +1,24 @@
 import tkinter as tk
 import copy
+from math import pi, cos, sin
 
-HEIGHT = 920
-WIDTH = 1280
-FPS = 30
+FPS = 144
 
+HEIGHT = 800
+WIDTH = 1200
+
+XMIN = 0
+XMAX = WIDTH
+YMIN = 0
+YMAX = HEIGHT
+
+# =========== Projectiles ============
+# Projectile 1 : Regular
+PRegSizeX = 2
+PRegSizeY = 2
+PRegSpeed = 1
+
+# Calculus...
 PERIOD = int((1/FPS) *1000)
 
 class canvaSP():
@@ -73,9 +87,16 @@ class canvaSP():
         #     dy = WIDTH-y12
         # self.Move(dx, dy)
 
+        # Create a projectile in front of the player
+        if touche == "space":
+            self.player.Shoot("regular", 0)
+        if touche == "m":
+            print(len(self.projectiles))
+
+
+
     def KeyRelease(self,event):
         touche = event.keysym
-        print(touche)
         if touche == 'Left':
             self.player.vx = 0
         if touche == 'Right':
@@ -114,35 +135,25 @@ class canvaSP():
         # Manage collisions between aliens and the screen's edges
         for alien in self.aliens:
             (x0,y0,x1,y1) = self.canv.coords(alien.obj)
-            # Collision left of screen
-            if x0 <= 0:
+            if x0 <= XMIN:      # Collision left of screen
                 alien.vx = abs(alien.vx)
-            # Collision right of screen
-            elif x1 >= WIDTH:
+            elif x1 >= XMAX:    # Collision right of screen
                 alien.vx = -abs(alien.vx)
-            # Collision top of screen
-            elif y0 <= 0:
+            elif y0 <= YMIN:    # Collision top of screen
                 alien.vy = abs(alien.vy)
-            # Collision bottom of screen
-            elif y1 >= HEIGHT:
+            elif y1 >= YMAX:    # Collision bottom of screen
                 alien.vy = -abs(alien.vy)
 
         # Manage collisions between the player and the screen's borders
         (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
-        # Limit player movement to the screen
-
-        # Limit left movement to the screen
-        if x0 < 0:
+        if x0 < XMIN:     # Limit left movement to the screen
             self.player.Move(abs(x0),0)
-        # Limit right movement to the screen
-        if x1 > WIDTH :
-            self.player.Move(WIDTH - x1, 0)
-        # Limit top movement to the screen
-        if y0 < 0:
+        if x1 > XMAX :    # Limit right movement to the screen
+            self.player.Move(XMAX - x1, 0)
+        if y0 < YMIN:     # Limit top movement to the screen
             self.player.Move(0,abs(y0))
-        # Limit bottom movement to the screen
-        if y1 > HEIGHT:
-            self.player.Move(0, HEIGHT - y1)
+        if y1 > YMAX:     # Limit bottom movement to the screen
+            self.player.Move(0, YMAX - y1)
 
         # Manage collisions between the projectiles and the screen's borders
 
@@ -156,9 +167,47 @@ class canvaSP():
             alien.updatePositionOnCanvas()
         # Update positions for the player
         self.player.updatePositionOnCanvas()
+        # Update positions for all projectiles on canvas
+        for i, projectile in enumerate(self.projectiles):
+            isOnScreen = projectile.updatePositionOnCanvas()
+            print(len(self.projectiles))
+            if not isOnScreen: # delete projectile if it disappears from the screen
+                del self.projectiles[i]
+
+class Projectile(canvaSP):
+    def __init__(self, canvas,  x0, y0, sizex, sizey, vx0=0, vy0=0 ):
+        self.vx = vx0
+        self.vy = vy0
+
+        self.canvas = canvas
+        self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  fill = "maroon")
+
+    def Move(self,x,y):
+        self.canvas.move(self.obj, x, y)
+
+    def updatePositionOnCanvas(self):
+        (x0,y0,x1,y1) = self.canvas.coords(self.obj)
+        dx,dy = self.vx * PERIOD, self.vy * PERIOD
+        self.Move(dx, dy)
+        isOnScreen = not ((dx<0 and x0 + dx < XMIN) or (dx>0 and x1 +dx > XMAX) or (dy<0 and y0 + dy < YMIN) or (dy>0 and y1 + dy > YMAX))
+        return isOnScreen
+        # # Limit left movement to the screen
+        # if dx<0 and x0 + dx < XMIN:
+        #     dx = -(x0 - XMIN)
+        # # Limit right movement to the screen
+        # if dx>0 and x1 +dx > XMAX :
+        #     dx = XMAX -x1
+        # # Limit top movement to the screen
+        # if dy<0 and y0 + dy < YMIN:
+        #     dy = -(y0 - YMIN)
+        # # Limit bottom movement to the screen
+        # if dy>0 and y1 + dy > YMAX:
+        #     dy = YMAX -y1
+        # self.Move(dx, dy)
+        # return True # Projectile is still on screen
 
 
-class Vaisseau():
+class Vaisseau(canvaSP):
     def __init__(self, canvas,  x0, y0, sizex, sizey, vx0=0, vy0=0 ):
         self.vx = vx0
         self.vy = vy0
@@ -170,37 +219,44 @@ class Vaisseau():
         (x0,y0,x1,y1) = self.canvas.coords(self.obj)
         dx,dy = self.vx * PERIOD, self.vy * PERIOD
         # Limit left movement to the screen
-        if dx<0 and x0 + dx < 0:
-            dx = -x0
+        if dx<0 and x0 + dx < XMIN:
+            dx = -(x0 - XMIN)
         # Limit right movement to the screen
-        if dx>0 and x1 +dx > WIDTH :
-            dx = WIDTH -x1
+        if dx>0 and x1 +dx > XMAX :
+            dx = XMAX -x1
         # Limit top movement to the screen
-        if dy<0 and y0 + dy < 0:
-            dy = -y0
+        if dy<0 and y0 + dy < YMIN:
+            dy = -(y0 - YMIN)
         # Limit bottom movement to the screen
-        if dy>0 and y1 + dy > HEIGHT:
-            dy = HEIGHT -y1
+        if dy>0 and y1 + dy > YMAX:
+            dy = YMAX -y1
         self.Move(dx, dy)
 
     def Move(self,x,y):
         self.canvas.move(self.obj, x, y)
     
+    def Shoot(self, bulletType, angle):
+        global canvas # Récupérer le canvas comme objet
+                      # pour update la liste des projectiles
+        (x0,y0,x1,y1) = self.canvas.coords(self.obj)
+        if bulletType == "regular":
+            x = (x0+x1)/2 - PRegSizeX/2
+            y = y0 - PRegSizeY
+            (vx,vy) = speedVectorCoords(PRegSpeed, angle)
+            projectile = Projectile(self.canvas, x, y, PRegSizeX, PRegSizeY, vx, vy)
+            canvas.projectiles.append(projectile)
+    
     def ResetPosition(self, x, y):
         self.canvas.coords(self.obj, x, y)
 
-
-    
-
-
-
-
-
-
-
-
-
-
+# speedVectorCoords(1,0) créé un vecteur vitesse (vx,vy)
+# de norme 1, allant vers le haut (0 degrés, compté dans le sens horaire)
+def speedVectorCoords(norm, direction):
+    rad = (pi * direction) / 180 # direction en radian
+    radTrigo = 7.85 - rad # Angle en radian pour cos/sin
+    vx = norm * cos(radTrigo)
+    vy = - norm * sin(radTrigo) # signe - car coord y vers le bas
+    return (round(vx,2),round(vy,2)) # Approximer à deux décimales
 
 
 mw = tk.Tk()
