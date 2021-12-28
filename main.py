@@ -1,6 +1,6 @@
 import tkinter as tk
 import copy
-from math import pi, cos, sin
+from math import pi, cos, sin, atan
 
 FPS = 144
 
@@ -12,6 +12,8 @@ XMAX = WIDTH
 YMIN = 0
 YMAX = HEIGHT
 
+PLAYER_VELOCITY = 1
+
 # =========== Projectiles ============
 # Projectile 1 : Regular
 PRegSizeX = 2
@@ -20,6 +22,15 @@ PRegSpeed = 1
 
 # Calculus...
 PERIOD = int((1/FPS) *1000)
+
+# speedVectorCoords(1,0) créé un vecteur vitesse (vx,vy)
+# de norme 1, allant vers le haut (0 degrés, compté dans le sens horaire)
+def speedVectorCoords(norm, direction):
+    rad = (pi * direction) / 180 # direction en radian
+    radTrigo = 7.85 - rad # Angle en radian pour cos/sin
+    vx = norm * cos(radTrigo)
+    vy = - norm * sin(radTrigo) # signe - car coord y vers le bas
+    return (round(vx,2),round(vy,2)) # Approximer à deux décimales
 
 class canvaSP():
     def __init__(self,mw,width,height):
@@ -39,81 +50,99 @@ class canvaSP():
         self.murs = []
         self.projectiles = []
 
-        
+        # Liste contenant l'ensemble des touches pressées à l'instant t
+        self.touches = []
 
         self.currentLevel = 0
         self.levels = ['level1']
         self.loadLevel()
+
+        # Lancer la boucle de check des collisions
         self.Collision()
 
+    # Sets up the player's speed according
+    # to all the relevant keys being pressed
+    def SetPlayerSpeed(self):
+        # Sum all vectors to get the direction of the speed vector for the player
+        speedVectorX = sum([
+            PLAYER_VELOCITY if 'Right' in self.touches else 0,
+            -PLAYER_VELOCITY if 'Left' in self.touches else 0
+        ])
+        speedVectorY = sum([
+            PLAYER_VELOCITY if 'Down' in self.touches else 0,
+            -PLAYER_VELOCITY if 'Up' in self.touches else 0
+        ])
+        print("Les vecteurs sont {} et {}".format(speedVectorX, speedVectorY))
+        print("On a les touches {}", self.touches)
+        # Set the norm according to PLAYER_VELOCITY, with the correct angle for direction
+        # if not(speedVectorX == 0 and speedVectorY == 0):
+        #     if speedVectorX == 0:
+        #         self.player.vx = 0
+        #         self.player.vy = PLAYER_VELOCITY * (-1 if speedVectorY < 0 else 1)
+        #     else:
+        #         if speedVectorY==0:
+        #             angle = atan(speedVectorY/speedVectorX)
+        #             print("L'angle est {}".format(angle))
+        #             self.player.vx = -PLAYER_VELOCITY * cos(angle)
+        #             self.player.vy = -PLAYER_VELOCITY * sin(angle)
+        #         else:
+        #             self.player.vx = speedVectorX
+        # else:
+        #     self.player.vx = 0
+        #     self.player.vy = 0
+        if (speedVectorX == 0 or speedVectorY == 0):
+            self.player.vx = speedVectorX
+            self.player.vy = speedVectorY
+        else:
+            angle = atan(speedVectorY/speedVectorX)
+            if speedVectorX < 0:
+                angle += pi
+            print("L'angle est {}".format(angle))
+            self.player.vx = PLAYER_VELOCITY * cos(angle)
+            self.player.vy = PLAYER_VELOCITY * sin(angle)
+            print(self.player.vx, self.player.vy)
+
     def KeyPress(self,event):
-        (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
+        # (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
         touche = event.keysym
-        if touche == 'Left':
-            #if x0 <= 0:
-                #self.player.vx = 0
-            #else:    
-            self.player.vx = -0.2
-        if touche == 'Right':
-            self.player.vx = 0.2
-        if touche == 'Up':
-            self.player.vy = -0.2
-        if touche == 'Down':
-            self.player.vy = 0.2
-        # if touche == 'Left':
-        #     self.player.vx = -0.2
-        # if touche == 'Right':
-        #     self.player.vx = 0.2
-        # if touche == 'Up':
-        #     self.player.vy = -0.2
-        # if touche == 'Down':
-        #     self.player.vy = 0.2
-
-        # (x0,y0,x1,y1) = self.canvas.coords(self.obj)
-        # dx,dy = self.vx * PERIOD, self.vy * PERIOD
-        # x02,y02 = x0 + dx, y0 + dy
-        # x12,y12 = x1 + dx, y1 + dy
-        # # Limit left movement to the screen
-        # if dx > x02:
-        #     dx = x02
-        # # Limit right movement to the screen
-        # if dx > WIDTH-x12 :
-        #     dx = WIDTH-x12
-        # # Limit top movement to the screen
-        # if dy > y02:
-        #     dy = y02
-        # # Limit bottom movement to the screen
-        # if dy > HEIGHT-y12:
-        #     dy = WIDTH-y12
-        # self.Move(dx, dy)
-
-        # Create a projectile in front of the player
-        if touche == "space":
-            self.player.Shoot("regular", 0)
-        if touche == "m":
-            print(len(self.projectiles))
-
-
+        if touche not in self.touches:
+            if touche == "space":
+                self.player.Shoot("regular", 0)
+            if touche in ['Left', 'Right', 'Up', 'Down']:
+                self.touches.append(touche)
+                self.SetPlayerSpeed()
+            # self.touches.append(touche)
+            # if touche == 'Left':
+            #     self.player.vx += -PLAYERVX
+            # elif touche == 'Right':
+            #     self.player.vx += PLAYERVX
+            # elif touche == 'Up':
+            #     self.player.vy += -PLAYERVY
+            # elif touche == 'Down':
+            #     self.player.vy += PLAYERVY
+            # # Create a projectile in front of the player
+            # elif touche == "space":
+            #     self.player.Shoot("regular", 0)
+            # self.SetPlayerSpeed()
 
     def KeyRelease(self,event):
         touche = event.keysym
-        if touche == 'Left':
-            self.player.vx = 0
-        if touche == 'Right':
-            self.player.vx = 0
-        if touche == 'Up':
-            self.player.vy = 0
-        if touche == 'Down':
-            self.player.vy = 0
+        if touche in self.touches:
+            self.touches.remove(touche)
+            self.SetPlayerSpeed()
+
 
     def loadLevel(self):
     # TO DO : open...
+        # Save the current player coordinates
         (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
-        vx,vy = self.player.vx, self.player.vy
-        self.canv.delete('all')
-        self.player = Vaisseau(self.canv, x0, y0, x1-x0 ,y1-y0 , vx0 = vx, vy0 = vy)
+        # vx,vy = self.player.vx, self.player.vy
 
-    # TO DO : Place player at base of screen
+        self.canv.delete('all')
+
+        x = (XMIN + XMAX) / 2
+        y = (YMAX - (y1-y0))
+        self.player = Vaisseau(self.canv, x, y, x1-x0 ,y1-y0)
 
         level = [ [Vaisseau(self.canv, 0, 0 , 25, 25,  vx0 = 0.1, vy0 = 0)], [], []]
         [ self.aliens, self.murs, self.projectiles] = level
@@ -125,10 +154,15 @@ class canvaSP():
         listeCollision = [[] for i in range(5)]
 
         
-
+        # Check collisions with the screen limits
         self.windowCollisions()
+
+        # Handle collisions ... and move objects accordingly
         self.manageCollision(listeCollision)
+        #... and move objects accordingly
         self.updatePositions()
+
+        # The loop, every PERIOD ms
         self.mw.after(PERIOD, self.Collision)
 
     def windowCollisions(self):
@@ -170,8 +204,8 @@ class canvaSP():
         # Update positions for all projectiles on canvas
         for i, projectile in enumerate(self.projectiles):
             isOnScreen = projectile.updatePositionOnCanvas()
-            print(len(self.projectiles))
             if not isOnScreen: # delete projectile if it disappears from the screen
+                self.canv.delete(self.projectiles[i].obj)
                 del self.projectiles[i]
 
 class Projectile(canvaSP):
@@ -191,21 +225,6 @@ class Projectile(canvaSP):
         self.Move(dx, dy)
         isOnScreen = not ((dx<0 and x0 + dx < XMIN) or (dx>0 and x1 +dx > XMAX) or (dy<0 and y0 + dy < YMIN) or (dy>0 and y1 + dy > YMAX))
         return isOnScreen
-        # # Limit left movement to the screen
-        # if dx<0 and x0 + dx < XMIN:
-        #     dx = -(x0 - XMIN)
-        # # Limit right movement to the screen
-        # if dx>0 and x1 +dx > XMAX :
-        #     dx = XMAX -x1
-        # # Limit top movement to the screen
-        # if dy<0 and y0 + dy < YMIN:
-        #     dy = -(y0 - YMIN)
-        # # Limit bottom movement to the screen
-        # if dy>0 and y1 + dy > YMAX:
-        #     dy = YMAX -y1
-        # self.Move(dx, dy)
-        # return True # Projectile is still on screen
-
 
 class Vaisseau(canvaSP):
     def __init__(self, canvas,  x0, y0, sizex, sizey, vx0=0, vy0=0 ):
@@ -248,15 +267,6 @@ class Vaisseau(canvaSP):
     
     def ResetPosition(self, x, y):
         self.canvas.coords(self.obj, x, y)
-
-# speedVectorCoords(1,0) créé un vecteur vitesse (vx,vy)
-# de norme 1, allant vers le haut (0 degrés, compté dans le sens horaire)
-def speedVectorCoords(norm, direction):
-    rad = (pi * direction) / 180 # direction en radian
-    radTrigo = 7.85 - rad # Angle en radian pour cos/sin
-    vx = norm * cos(radTrigo)
-    vy = - norm * sin(radTrigo) # signe - car coord y vers le bas
-    return (round(vx,2),round(vy,2)) # Approximer à deux décimales
 
 
 mw = tk.Tk()
