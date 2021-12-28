@@ -2,7 +2,7 @@ import tkinter as tk
 import copy
 from math import pi, cos, sin, atan
 
-FPS = 144
+FPS = 60
 
 HEIGHT = 800
 WIDTH = 1200
@@ -14,11 +14,13 @@ YMAX = HEIGHT
 
 PLAYER_VELOCITY = 1
 
+FIRE_RATE = 500 # in ms
+
 # =========== Projectiles ============
 # Projectile 1 : Regular
 PRegSizeX = 2
 PRegSizeY = 2
-PRegSpeed = 1
+PRegSpeed = 1.5
 
 # Calculus...
 PERIOD = int((1/FPS) *1000)
@@ -58,7 +60,9 @@ class canvaSP():
         self.loadLevel()
 
         # Lancer la boucle de check des collisions
-        self.Collision()
+        self.CollisionClock = self.mw.after(PERIOD, self.Collision)
+        # Boucle pour l'autoshoot (touche espace en position basse)
+        self.AutoShootClock = None
 
     # Sets up the player's speed according
     # to all the relevant keys being pressed
@@ -72,24 +76,6 @@ class canvaSP():
             PLAYER_VELOCITY if 'Down' in self.touches else 0,
             -PLAYER_VELOCITY if 'Up' in self.touches else 0
         ])
-        print("Les vecteurs sont {} et {}".format(speedVectorX, speedVectorY))
-        print("On a les touches {}", self.touches)
-        # Set the norm according to PLAYER_VELOCITY, with the correct angle for direction
-        # if not(speedVectorX == 0 and speedVectorY == 0):
-        #     if speedVectorX == 0:
-        #         self.player.vx = 0
-        #         self.player.vy = PLAYER_VELOCITY * (-1 if speedVectorY < 0 else 1)
-        #     else:
-        #         if speedVectorY==0:
-        #             angle = atan(speedVectorY/speedVectorX)
-        #             print("L'angle est {}".format(angle))
-        #             self.player.vx = -PLAYER_VELOCITY * cos(angle)
-        #             self.player.vy = -PLAYER_VELOCITY * sin(angle)
-        #         else:
-        #             self.player.vx = speedVectorX
-        # else:
-        #     self.player.vx = 0
-        #     self.player.vy = 0
         if (speedVectorX == 0 or speedVectorY == 0):
             self.player.vx = speedVectorX
             self.player.vy = speedVectorY
@@ -107,27 +93,18 @@ class canvaSP():
         touche = event.keysym
         if touche not in self.touches:
             if touche == "space":
-                self.player.Shoot("regular", 0)
+                self.touches.append(touche)
+                self.player.AutoShoot()
             if touche in ['Left', 'Right', 'Up', 'Down']:
                 self.touches.append(touche)
                 self.SetPlayerSpeed()
-            # self.touches.append(touche)
-            # if touche == 'Left':
-            #     self.player.vx += -PLAYERVX
-            # elif touche == 'Right':
-            #     self.player.vx += PLAYERVX
-            # elif touche == 'Up':
-            #     self.player.vy += -PLAYERVY
-            # elif touche == 'Down':
-            #     self.player.vy += PLAYERVY
-            # # Create a projectile in front of the player
-            # elif touche == "space":
-            #     self.player.Shoot("regular", 0)
-            # self.SetPlayerSpeed()
 
     def KeyRelease(self,event):
         touche = event.keysym
         if touche in self.touches:
+            if touche == "space":
+                self.canv.after_cancel(self.player.AutoShootClock)
+                self.player.AutoShootClock = None
             self.touches.remove(touche)
             self.SetPlayerSpeed()
 
@@ -162,8 +139,8 @@ class canvaSP():
         #... and move objects accordingly
         self.updatePositions()
 
-        # The loop, every PERIOD ms
-        self.mw.after(PERIOD, self.Collision)
+        # Loop on Collision function
+        self.CollisionClock = self.mw.after(PERIOD, self.Collision)
 
     def windowCollisions(self):
         # Manage collisions between aliens and the screen's edges
@@ -255,8 +232,7 @@ class Vaisseau(canvaSP):
         self.canvas.move(self.obj, x, y)
     
     def Shoot(self, bulletType, angle):
-        global canvas # Récupérer le canvas comme objet
-                      # pour update la liste des projectiles
+
         (x0,y0,x1,y1) = self.canvas.coords(self.obj)
         if bulletType == "regular":
             x = (x0+x1)/2 - PRegSizeX/2
@@ -264,6 +240,10 @@ class Vaisseau(canvaSP):
             (vx,vy) = speedVectorCoords(PRegSpeed, angle)
             projectile = Projectile(self.canvas, x, y, PRegSizeX, PRegSizeY, vx, vy)
             canvas.projectiles.append(projectile)
+    
+    def AutoShoot(self):
+        self.Shoot("regular", 0)
+        self.AutoShootClock = self.canvas.after(FIRE_RATE, self.AutoShoot)
     
     def ResetPosition(self, x, y):
         self.canvas.coords(self.obj, x, y)
