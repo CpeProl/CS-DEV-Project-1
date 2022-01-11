@@ -1,7 +1,7 @@
 import tkinter as tk
 import copy
 from math import pi, cos, sin, atan
-
+from PIL import Image, ImageTk
 
 from collision import CollisionCheck
 
@@ -48,6 +48,7 @@ class canvaSP():
         self.canv.bind('<KeyPress>',self.KeyPress)
         self.canv.bind('<KeyRelease>',self.KeyRelease)
         self.canv.focus_set()
+        
         self.canv.pack()
 
         self.player = Vaisseau(self.canv, 500,500,10,10, vx0 = 0, vy0 = 0)
@@ -312,7 +313,14 @@ class Vaisseau(canvaSP):
 mw = tk.Tk()
 mw.title('Space Invader')
 
+photo = tk.PhotoImage(file = "téléchargement.gif")
+#mw.create_image(0,0, anchor = "nw", image = photo)
+        #self.canv.create_image(0,0, anchor = "nw", image = photo)
+limg = tk.Label(mw, i= photo)
+limg.place(x = 110, y = 110)
+limg.pack()
 canvas = canvaSP(mw, WIDTH, HEIGHT)
+
 buttonQuit = tk.Button(mw, text = "Quit", command = mw.destroy)
 buttonQuit.pack()
 buttonStart= tk.Button(mw, text = "Restart", command = canvas.loadLevel)
