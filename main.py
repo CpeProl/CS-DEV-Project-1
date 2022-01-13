@@ -1,6 +1,12 @@
+#Fichier principal du Projet SPACE INVADER
+#Auteurs : COUTAUD HUGO ; PEROL Julien
+#Voir le README pour plus de détails.
+
+
 import tkinter as tk
 import copy
 from math import pi, cos, sin, atan
+from PIL import Image, ImageTk
 
 from collision import CollisionCheck
 from constants import *
@@ -18,16 +24,21 @@ class canvaSP():
     def __init__(self,mw,width,height):
 
         self.mw = mw
+        #self.mw.attributes('-alpha',0.5) #TRANSPARENCY
         
         self.width = width
         self.height = height
         self.canv = tk.Canvas(self.mw, height = self.height, width = self.width)
+        
         self.canv.bind('<KeyPress>',self.KeyPress)
         self.canv.bind('<KeyRelease>',self.KeyRelease)
         self.canv.focus_set()
+        
         self.canv.pack()
+        
+        
 
-        self.player = Vaisseau(self.canv, 500,500,10,10, vx0 = 0, vy0 = 0)
+        self.player = Vaisseau(self.canv, 500,500,30,30, vx0 = 0, vy0 = 0)
         self.aliens = []
         self.murs = []
         self.projectiles = []
@@ -43,6 +54,7 @@ class canvaSP():
         self.CollisionClock = self.mw.after(PERIOD, self.Collision)
         # Boucle pour l'autoshoot (touche espace en position basse)
         self.AutoShootClock = None
+        
 
     # Sets up the player's speed according
     # to all the relevant keys being pressed
@@ -98,17 +110,33 @@ class canvaSP():
             # vx,vy = self.player.vx, self.player.vy
 
             self.canv.delete('all')
+            self.photoBG = tk.PhotoImage(file = "Background.gif")
+            self.canv.create_image(0,0, anchor = "nw", image = self.photoBG)
 
             x = (XMIN + XMAX) / 2
             y = (YMAX - (y1-y0))
             self.player = Vaisseau(self.canv, x, y, x1-x0 ,y1-y0)
+
+            # Définition de l'apparence du joueur
+            self.photoJoueur = tk.PhotoImage(file = "Joueur2.gif")
+            self.player.objImg = self.player.canvas.create_image(x-12.5,y-12.5, anchor = "nw", image = self.photoJoueur)
         else:
             self.canv.delete('all')
-            self.player = Vaisseau(self.canv, 500,500,10,10, vx0 = 0, vy0 = 0)
+            self.photoBG = tk.PhotoImage(file = "Background.gif")
+            self.canv.create_image(0,0, anchor = "nw", image = self.photoBG)
+            self.player = Vaisseau(self.canv, 500,500,30,30, vx0 = 0, vy0 = 0)
 
-
-        level = [ [Vaisseau(self.canv, 0, 0 , 25, 25,  vx0 = 0.6, vy0 = 0), Vaisseau(self.canv, 30, 0 , 25, 25,  vx0 = 0.6, vy0 = 0), Vaisseau(self.canv, 70, 30 , 50, 50,  vx0 = 0.6, vy0 = 0)], [], []]
+            # Définition de l'apparence du joueur
+            self.photoJoueur = tk.PhotoImage(file = "Joueur2.gif")
+            self.player.objImg = self.player.canvas.create_image(487.5,487.5, anchor = "nw", image = self.photoJoueur)
+        
+        level = [ [Vaisseau(self.canv, 0, 0 , 100, 138,  vx0 = 0.1, vy0 = 0)], [], []]
         [ self.aliens, self.murs, self.projectiles] = level
+        for i, alien in enumerate(self.aliens): 
+            (x0,y0,x1,y1) = self.canv.coords(alien.obj)
+            # Définition de l'apparence de l'alien
+            self.photoAlien = tk.PhotoImage(file = "Alien.gif")
+            alien.objImg = alien.canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
 
         self.aliens = triAbscissesAliens(self.aliens,self.canv)
 
@@ -126,6 +154,7 @@ class canvaSP():
                 self.canv.delete(self.projectiles[i].obj)
                 del self.projectiles[i]
                 self.canv.delete(self.player.obj)
+                self.canv.delete(self.player.objImg)
                 del self.player
                 self.loadLevel()
             
@@ -135,6 +164,7 @@ class canvaSP():
                     self.canv.delete(self.projectiles[i].obj)
                     del self.projectiles[i]
                     self.canv.delete(self.aliens[j].obj)
+                    self.canv.delete(self.aliens[j].objImg)
                     del self.aliens[j]
 
 
@@ -224,7 +254,7 @@ class canvaSP():
             if not isOnScreen: # delete projectile if it disappears from the screen
                 self.canv.delete(self.projectiles[i].obj)
                 del self.projectiles[i]
-
+    
 class Projectile(canvaSP):
     def __init__(self, canvas,  x0, y0, sizex, sizey, vx0=0, vy0=0 ):
         self.vx = vx0
@@ -232,6 +262,7 @@ class Projectile(canvaSP):
 
         self.canvas = canvas
         self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  fill = "maroon")
+        
 
     def Move(self,x,y):
         self.canvas.move(self.obj, x, y)
@@ -247,9 +278,14 @@ class Vaisseau(canvaSP):
     def __init__(self, canvas,  x0, y0, sizex, sizey, vx0=0, vy0=0 ):
         self.vx = vx0
         self.vy = vy0
-
         self.canvas = canvas
-        self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  fill = "maroon")
+        
+        self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  
+                                            fill = None, outline = None, width =0)
+        self.objImg = None
+        
+        
+  
 
     def updatePositionOnCanvas(self):
         (x0,y0,x1,y1) = self.canvas.coords(self.obj)
@@ -270,29 +306,51 @@ class Vaisseau(canvaSP):
 
     def Move(self,x,y):
         self.canvas.move(self.obj, x, y)
+        self.canvas.move(self.objImg,x,y)
     
     def Shoot(self, bulletType, angle):
 
         (x0,y0,x1,y1) = self.canvas.coords(self.obj)
+        # Définition de l'apparence du joueur pendant un tir
+        #(x0,y0,x1,y1) = self.canvas.coords(self.obj)
+        self.canvas.delete(self.objImg)
+        self.photoJoueurTire = tk.PhotoImage(file = "JoueurGun.gif")
+        self.objImg = self.canvas.create_image(x0,y0, anchor = "nw", image = self.photoJoueurTire)
+        #self.canvas.delete(self.objImg)
+        #Reset l'apparence
+        self.canvas.after(400, self.ResetAppearance)
+        
         if bulletType == "regular":
             x = (x0+x1)/2 - PRegSizeX/2
             y = y0 - PRegSizeY
             (vx,vy) = speedVectorCoords(PRegSpeed, angle)
             projectile = Projectile(self.canvas, x, y, PRegSizeX, PRegSizeY, vx, vy)
             canvas.projectiles.append(projectile)
+        
     
     def AutoShoot(self):
         self.Shoot("regular", 0)
         self.AutoShootClock = self.canvas.after(FIRE_RATE, self.AutoShoot)
+        
+        
     
     def ResetPosition(self, x, y):
         self.canvas.coords(self.obj, x, y)
+    
+    def ResetAppearance(self):
+        (x0,y0,x1,y1) = self.canvas.coords(self.obj)
+        self.canvas.delete(self.objImg)
+        self.photoJoueur = tk.PhotoImage(file = "Joueur.gif")
+        self.objImg = self.canvas.create_image(x0,y0, anchor = "nw", image = self.photoJoueur)
 
 
 mw = tk.Tk()
 mw.title('Space Invader')
 
+
+
 canvas = canvaSP(mw, WIDTH, HEIGHT)
+
 buttonQuit = tk.Button(mw, text = "Quit", command = mw.destroy)
 buttonQuit.pack()
 buttonStart= tk.Button(mw, text = "Restart", command = canvas.loadLevel)
@@ -304,3 +362,10 @@ mw.mainloop()
 
 
 
+#self.photo = tk.PhotoImage(file = "Test.gif")
+#self.photo2 = tk.PhotoImage(file = "Imagedefond.gif" )
+#self.mw.create_image(0,0, anchor = "nw", image = photo)
+#self.canv.create_image(0,0, anchor = "nw", image = self.photo)
+#limg = tk.Label(self.mw, i= self.photo)
+#limg.place(x = 0, y = 0, relwidth=1, relheight=1, bg = None)
+#limg.pack()
