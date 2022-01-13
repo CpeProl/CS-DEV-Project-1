@@ -2,31 +2,8 @@ import tkinter as tk
 import copy
 from math import pi, cos, sin, atan
 
-
 from collision import CollisionCheck
-
-FPS = 60
-
-HEIGHT = 600
-WIDTH = 1000
-
-XMIN = 0
-XMAX = WIDTH
-YMIN = 0
-YMAX = HEIGHT
-
-PLAYER_VELOCITY = 1
-
-FIRE_RATE = 500 # in ms
-
-# =========== Projectiles ============
-# Projectile 1 : Regular
-PRegSizeX = 2
-PRegSizeY = 2
-PRegSpeed = 1.5
-
-# Calculus...
-PERIOD = int((1/FPS) *1000)
+from constants import *
 
 # speedVectorCoords(1,0) créé un vecteur vitesse (vx,vy)
 # de norme 1, allant vers le haut (0 degrés, compté dans le sens horaire)
@@ -129,8 +106,11 @@ class canvaSP():
             self.canv.delete('all')
             self.player = Vaisseau(self.canv, 500,500,10,10, vx0 = 0, vy0 = 0)
 
-        level = [ [Vaisseau(self.canv, 0, 0 , 25, 25,  vx0 = 0.1, vy0 = 0)], [], []]
+
+        level = [ [Vaisseau(self.canv, 0, 0 , 25, 25,  vx0 = 0.6, vy0 = 0), Vaisseau(self.canv, 30, 0 , 25, 25,  vx0 = 0.6, vy0 = 0), Vaisseau(self.canv, 70, 30 , 50, 50,  vx0 = 0.6, vy0 = 0)], [], []]
         [ self.aliens, self.murs, self.projectiles] = level
+
+        self.aliens = triAbscissesAliens(self.aliens,self.canv)
 
 
     def Collision(self): 
@@ -204,16 +184,16 @@ class canvaSP():
 
     def windowCollisions(self):
         # Manage collisions between aliens and the screen's edges
-        for alien in self.aliens:
-            (x0,y0,x1,y1) = self.canv.coords(alien.obj)
-            if x0 <= XMIN:      # Collision left of screen
-                alien.vx = abs(alien.vx)
-            elif x1 >= XMAX:    # Collision right of screen
-                alien.vx = -abs(alien.vx)
-            elif y0 <= YMIN:    # Collision top of screen
-                alien.vy = abs(alien.vy)
-            elif y1 >= YMAX:    # Collision bottom of screen
-                alien.vy = -abs(alien.vy)
+        if (len(self.aliens) > 0):
+            coordsAlienGauche = self.canv.coords(self.aliens[0].obj)
+            coordsAlienDroite = self.canv.coords(self.aliens[-1].obj)
+            # Groupe d'alien commencent à sortir de l'écran à gauche
+            if coordsAlienGauche[0] <= XMIN:
+                for alien in self.aliens:
+                    alien.vx = abs(alien.vx)
+            elif coordsAlienDroite[2] >= XMAX:
+                for alien in self.aliens:
+                    alien.vx = -abs(alien.vx)
 
         # Manage collisions between the player and the screen's borders
         (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
