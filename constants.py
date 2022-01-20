@@ -4,6 +4,10 @@
 SQUADRON_X_SPACING = 5 # in pixels
 SQUADRON_Y_SPACING = 5 # in pixels
 
+# ============= ALIENS =============
+ALIEN_WIDTH = 10
+ALIEN_HEIGHT = 10
+
 FPS = 60
 
 HEIGHT = 800

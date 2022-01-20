@@ -138,8 +138,6 @@ class canvaSP():
             self.photoAlien = tk.PhotoImage(file = "Alien.gif")
             alien.objImg = alien.canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
 
-        self.aliens = triAbscissesAliens(self.aliens,self.canv)
-
 
     def Collision(self): 
         # [[coll player/aliens], [coll player/aliens] ,
@@ -331,8 +329,6 @@ class Vaisseau(canvaSP):
     def AutoShoot(self):
         self.Shoot("regular", 0)
         self.AutoShootClock = self.canvas.after(FIRE_RATE, self.AutoShoot)
-        
-        
     
     def ResetPosition(self, x, y):
         self.canvas.coords(self.obj, x, y)
