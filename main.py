@@ -11,6 +11,9 @@ from PIL import Image, ImageTk
 from collision import CollisionCheck
 from constants import *
 
+
+# ============= Fonctions externes =============
+
 # speedVectorCoords(1,0) créé un vecteur vitesse (vx,vy)
 # de norme 1, allant vers le haut (0 degrés, compté dans le sens horaire)
 def speedVectorCoords(norm, direction):
@@ -20,6 +23,9 @@ def speedVectorCoords(norm, direction):
     vy = - norm * sin(radTrigo) # signe - car coord y vers le bas
     return (round(vx,2),round(vy,2)) # Approximer à deux décimales
 
+
+
+# ============= Classe Canvas, définit tout nos éléments du canvas et permet de s'adapter leur changements =============
 class canvaSP():
     def __init__(self,mw,width,height):
 
@@ -46,6 +52,7 @@ class canvaSP():
         # Liste contenant l'ensemble des touches pressées à l'instant t
         self.touches = []
 
+        #Définition du level à charger. UNIQUEMENT UN SEUL POUR L'INSTANT.
         self.currentLevel = 0
         self.levels = ['level1']
         self.loadLevel()
@@ -80,7 +87,7 @@ class canvaSP():
             self.player.vy = PLAYER_VELOCITY * sin(angle)
             print(self.player.vx, self.player.vy)
 
-    def KeyPress(self,event):
+    def KeyPress(self,event):           #Permet de définir les press du clavier intéressants pour nous
         # (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
         touche = event.keysym
         if touche not in self.touches:
@@ -92,7 +99,7 @@ class canvaSP():
                 self.touches.append(touche)
                 self.SetPlayerSpeed()
 
-    def KeyRelease(self,event):
+    def KeyRelease(self,event):         #Fonction similaire à KeyPress, gère l'arrêt des fonctions quand la touche est relachée
         touche = event.keysym
         if touche in self.touches:
             if touche == "space":
@@ -102,9 +109,9 @@ class canvaSP():
             self.SetPlayerSpeed()
 
 
-    def loadLevel(self):
+    def loadLevel(self):        #Affiche un niveau prédéfini auparavant. La définition du contenu du level est également içi.
     # TO DO : open...
-        # Save the current player coordinates
+        # Save the current player coordinates if he already exists and resets the rest
         if self.player != None:
             (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
             # vx,vy = self.player.vx, self.player.vy
@@ -120,6 +127,8 @@ class canvaSP():
             # Définition de l'apparence du joueur
             self.photoJoueur = tk.PhotoImage(file = "Joueur2.gif")
             self.player.objImg = self.player.canvas.create_image(x-12.5,y-12.5, anchor = "nw", image = self.photoJoueur)
+        
+        #Reset the canvas. Create the player if there is no instance of him.
         else:
             self.canv.delete('all')
             self.photoBG = tk.PhotoImage(file = "Background.gif")
@@ -139,10 +148,10 @@ class canvaSP():
             alien.objImg = alien.canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
 
 
-    def Collision(self): 
+    def Collision(self):        #What to do in case of Collision.
         # [[coll player/aliens], [coll player/aliens] ,
         # [coll murs/projectiles], [aliens/murs], [aliens/projectiles] ]
-        listeCollision = [[] for i in range(5)]
+        listeCollision = [[] for i in range(5)] #UNUSED
 
         # For each individual projectile, checks every potential collision with player, aliens, walls
         for i, projectile in enumerate(self.projectiles):
@@ -236,11 +245,11 @@ class canvaSP():
 
         # Manage collisions between the projectiles and the screen's borders
 
-    def manageCollision(self, listeCollision):
+    def manageCollision(self, listeCollision): #UNUSED
         return 0
 
 
-    def updatePositions(self):
+    def updatePositions(self):      #Update positions for every element that needs it.
         # Update positions for all aliens
         for alien in self.aliens:
             alien.updatePositionOnCanvas()
@@ -253,7 +262,7 @@ class canvaSP():
                 self.canv.delete(self.projectiles[i].obj)
                 del self.projectiles[i]
     
-class Projectile(canvaSP):
+class Projectile(canvaSP):          #Classe des projectiles. Gére leur mouvement et update individuelle
     def __init__(self, canvas,  x0, y0, sizex, sizey, vx0=0, vy0=0 ):
         self.vx = vx0
         self.vy = vy0
@@ -272,7 +281,7 @@ class Projectile(canvaSP):
         isOnScreen = not ((dx<0 and x0 + dx < XMIN) or (dx>0 and x1 +dx > XMAX) or (dy<0 and y0 + dy < YMIN) or (dy>0 and y1 + dy > YMAX))
         return isOnScreen
 
-class Vaisseau(canvaSP):
+class Vaisseau(canvaSP):        #Classe du Vaisseau du Joueur. Sert aussi de base pour les aliens. Gère le mouvement et la production de projectiles + update.
     def __init__(self, canvas,  x0, y0, sizex, sizey, vx0=0, vy0=0 ):
         self.vx = vx0
         self.vy = vy0
@@ -285,7 +294,7 @@ class Vaisseau(canvaSP):
         
   
 
-    def updatePositionOnCanvas(self):
+    def updatePositionOnCanvas(self):       #Update de l'objet (movible) sur le canvas. Permet de lui imposer les limites nécessaires.
         (x0,y0,x1,y1) = self.canvas.coords(self.obj)
         dx,dy = self.vx * PERIOD, self.vy * PERIOD
         # Limit left movement to the screen
@@ -302,11 +311,11 @@ class Vaisseau(canvaSP):
             dy = YMAX -y1
         self.Move(dx, dy)
 
-    def Move(self,x,y):
+    def Move(self,x,y):     #Mouvement créé en passant par une fonction de Tkinter
         self.canvas.move(self.obj, x, y)
         self.canvas.move(self.objImg,x,y)
     
-    def Shoot(self, bulletType, angle):
+    def Shoot(self, bulletType, angle):     #Création du projectile et son mouvement. Activé par barre d'espace
 
         (x0,y0,x1,y1) = self.canvas.coords(self.obj)
         # Définition de l'apparence du joueur pendant un tir
@@ -326,20 +335,22 @@ class Vaisseau(canvaSP):
             canvas.projectiles.append(projectile)
         
     
-    def AutoShoot(self):
+    def AutoShoot(self):        #Si la barre d'espace est maintenue, active l'Autoshoot
         self.Shoot("regular", 0)
         self.AutoShootClock = self.canvas.after(FIRE_RATE, self.AutoShoot)
     
-    def ResetPosition(self, x, y):
+    def ResetPosition(self, x, y):      #Reset la position d'un objet sur les coordonnées spécifiées.
         self.canvas.coords(self.obj, x, y)
     
-    def ResetAppearance(self):
+    def ResetAppearance(self):          #Reset l'apparence du joueur. Surtout utilisé après un tir.
         (x0,y0,x1,y1) = self.canvas.coords(self.obj)
         self.canvas.delete(self.objImg)
         self.photoJoueur = tk.PhotoImage(file = "Joueur.gif")
         self.objImg = self.canvas.create_image(x0,y0, anchor = "nw", image = self.photoJoueur)
 
 
+
+# ============= MAIN; Call des objet et création de la fenêtre. =============
 mw = tk.Tk()
 mw.title('Space Invader')
 

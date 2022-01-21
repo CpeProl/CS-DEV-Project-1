@@ -3,11 +3,11 @@ from constants import *
 from matrixUtils import *
 
 
-class Alien(Vaisseau):
+class Alien(Vaisseau):      #Alien hérite des spécificitées et fonctions du joueur
     def __init__(self):
         return 0
 
-class Squadron(Alien):
+class Squadron(Alien):      #Comportement des aliens en escouades. Déplacements en groupes... etc
     # Takes a matrix (list of lists) of booleans, that describe the aliens' squadron layout
     # and creates a list of lists of all the aliens created (True = is an alien, False = nothing there)
     def __init__(self, genMatrix, startPoint, canvas, vx0=1):
