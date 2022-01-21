@@ -1,4 +1,4 @@
-# ============= GAME WIEWING =============
+# ============= GAME VIEWING =============
 
 FPS = 60
 PERIOD = int((1/FPS) *1000)
@@ -19,16 +19,28 @@ SQUADRON_Y_SPACING = 5 # in pixels
 
 # ============= ALIENS =============
 
-ALIEN_WIDTH = 10
-ALIEN_HEIGHT = 10
+ALIEN_WIDTH = 100
+ALIEN_HEIGHT = 138
 
 # ============= PLAYER =============
 
+PLAYER_WIDTH = 30
+PLAYER_HEIGHT = 30
 PLAYER_VELOCITY = 1
 FIRE_RATE = 500 # in ms
+PLAYER_PICPATH = "JoueurOriPerma.gif"
 
 # =========== Projectiles ============
 
-PROJECTILE_WIDTH = 2
-PROJECTILE_HEIGHT = 2
-PROJECTILE_SPEED = 1.5
+PROJECTILE_WIDTH = 10
+PROJECTILE_HEIGHT = 10
+PROJECTILE_SPEED = 1.25
+
+# =========== Walls ============
+
+BLOCK_HEIGHT = 40
+BLOCK_WIDTH = 40
+BLOCK_PICPATH = "wall.gif"
+
+WALL_X_SPACING = 0
+WALL_Y_SPACING = 0

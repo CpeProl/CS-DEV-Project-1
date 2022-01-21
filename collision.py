@@ -1,5 +1,5 @@
 import tkinter as tk
-import copy
+#import copy
 from math import pi, cos, sin, atan
 from tkinter.constants import SE
 
