@@ -16,6 +16,9 @@ import walls
 
 # ============= Fonctions externes =============
 
+
+# ============= Fonctions externes =============
+
 # speedVectorCoords(1,0) créé un vecteur vitesse (vx,vy)
 # de norme 1, allant vers le haut (0 degrés, compté dans le sens horaire)
 def speedVectorCoords(norm, direction):
@@ -116,7 +119,7 @@ class canvaSP():
     # Load (and define) the contents of the level called
     def loadLevel(self):
     # TO DO : open...
-        # Save the current player coordinates
+        # Save the current player coordinates if he already exists and resets the rest
         if self.player != None:
             (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
             # vx,vy = self.player.vx, self.player.vy
@@ -250,6 +253,7 @@ class canvaSP():
 # ============= Création de la fenêtre et du canvas en dur =============
 
 
+# ============= MAIN; Call des objet et création de la fenêtre. =============
 mw = tk.Tk()
 mw.title('Space Invader')
 
