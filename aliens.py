@@ -3,15 +3,16 @@ from constants import *
 from matrixUtils import *
 import tkinter as tk
 import projectiles
+import random
 
 
 # Similaire à Player mais en plus simple/différente sur certains points 
 # donc pas d'héritage
 class Alien():
-    def __init__(self, x0, y0, canvas, sizex, sizey, vx0=0, vy0=0 ):
+    def __init__(self, x0, y0, canvas, sizex, sizey, alien_picpath, vx0=0, vy0=0 ):
         self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  
                                             fill = None, outline = None, width =0)
-        self.photoAlien = tk.PhotoImage(file = "Alien.gif")
+        self.photoAlien = tk.PhotoImage(file = alien_picpath)
         self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
 
     # Move the Alien's object and picture in the canvas by dx and dy
@@ -21,12 +22,12 @@ class Alien():
     
     def Shoot(self, canvas):
         (x0,y0,x1,y1) = canvas.coords(self.obj)
-        # Définition de l'apparence de l'alien pendant un tir
-        canvas.delete(self.objImg)
-        self.photoAlienTire = tk.PhotoImage(file = "AlienTire.gif")
-        self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlienTire)
-        #Reset l'apparence
-        canvas.after(400, lambda:self.ResetAppearance(canvas))
+        # # Définition de l'apparence de l'alien pendant un tir
+        # canvas.delete(self.objImg)
+        # self.photoAlienTire = tk.PhotoImage(file = "AlienTire.gif")
+        # self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlienTire)
+        # #Reset l'apparence
+        # canvas.after(400, lambda:self.ResetAppearance(canvas))
         
         # Def coordonnées, vitesse et tir du projectile
         x = (x0+x1)/2 - PROJECTILE_WIDTH/2
@@ -36,12 +37,12 @@ class Alien():
         projectile = projectiles.Projectile(self.canvas, x, y, PROJECTILE_WIDTH, PROJECTILE_HEIGHT, vx, vy)
         canvas.projectiles.append(projectile)
     
-    # Reset the appearance of the objet. Called after every shoot
-    def ResetAppearance(self, canvas):
-        (x0,y0,x1,y1) = canvas.coords(self.obj)
-        canvas.delete(self.objImg)
-        self.photoAlien = tk.PhotoImage(file = "Alien.gif")
-        self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
+    # # Reset the appearance of the objet. Called after every shoot
+    # def ResetAppearance(self, canvas):
+    #     (x0,y0,x1,y1) = canvas.coords(self.obj)
+    #     canvas.delete(self.objImg)
+    #     self.photoAlien = tk.PhotoImage(file = "Alien.gif")
+    #     self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
 
 # Représente un groupe de plusieurs aliens. Gère le mouvement de groupe.
 class Squadron():
@@ -53,7 +54,6 @@ class Squadron():
 
         self.x0 = startPoint[0]
         self.y0 = startPoint[1]
-
         self.vx = vx0
         self.vy = vy0
 
@@ -63,7 +63,9 @@ class Squadron():
             for col in range(self.cols):
                 if genMatrix[row][col]: # Place an alien there
                     x, y = col * (ALIEN_WIDTH + SQUADRON_X_SPACING), row * (ALIEN_HEIGHT + SQUADRON_Y_SPACING)
-                    self.aliens[row][col] = Alien(x, y, canvas, ALIEN_WIDTH, ALIEN_HEIGHT,vx0=vx0)
+                    # Create an alien with a random picture, to choose from all the available ones
+                    alien_picpath = random.choice(ALIENS_PICPATH)
+                    self.aliens[row][col] = Alien(x, y, canvas, ALIEN_WIDTH, ALIEN_HEIGHT, alien_picpath, vx0=vx0)
                 else: # No alien to place there
                     self.aliens[row][col] = None
         

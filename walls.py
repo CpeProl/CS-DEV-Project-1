@@ -7,10 +7,10 @@ class Block():
     def __init__(self, x0, y0, canvas, sizex, sizey, vx0=0, vy0=0 ):
         self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  
                                             fill = "red", outline = None, width =0)
-        #self.photo = tk.PhotoImage(file = BLOCK_PICPATH)
-        #self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
+        #self.photoBlock = tk.PhotoImage(file = BLOCK_PICPATH)
+        #self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoBlock)
 
-# Représente un groupe de plusieurs aliens. Gère le mouvement de groupe.
+# Représente un groupe de plusieurs Blocks, un mur donc. Gère le mouvement de groupe.
 class Wall():
     # Takes a matrix (list of lists) of booleans, that describe the aliens' squadron layout
     # and creates a list of lists of all the aliens created (True = is an alien, False = nothing there)

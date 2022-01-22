@@ -13,9 +13,7 @@ import collision
 import aliens
 import player
 import walls
-
-# ============= Fonctions externes =============
-
+import pileFile
 
 # ============= Fonctions externes =============
 
@@ -48,7 +46,7 @@ class canvaSP():
         
         self.canv.pack()
         
-        
+        self.inGame = True
 
         self.player = player.Player(self.canv, 500,500,PLAYER_WIDTH,PLAYER_HEIGHT, vx0 = 0, vy0 = 0)
         self.squadron = None
@@ -74,12 +72,12 @@ class canvaSP():
     def SetPlayerSpeed(self):
         # Sum all vectors to get the direction of the speed vector for the player
         speedVectorX = sum([
-            PLAYER_VELOCITY if 'p' in self.touches else 0,
-            -PLAYER_VELOCITY if 'o' in self.touches else 0
+            PLAYER_VELOCITY if MOVE_RIGHT_KEY in self.touches else 0,
+            -PLAYER_VELOCITY if MOVE_LEFT_KEY in self.touches else 0
         ])
         speedVectorY = sum([
-            PLAYER_VELOCITY if 'q' in self.touches else 0,
-            -PLAYER_VELOCITY if 'a' in self.touches else 0
+            PLAYER_VELOCITY if MOVE_DOWN_KEY in self.touches else 0,
+            -PLAYER_VELOCITY if MOVE_UP_KEY in self.touches else 0
         ])
         if (speedVectorX == 0 or speedVectorY == 0):
             self.player.vx = speedVectorX
@@ -88,21 +86,27 @@ class canvaSP():
             angle = atan(speedVectorY/speedVectorX)
             if speedVectorX < 0:
                 angle += pi
-            print("L'angle est {}".format(angle))
+            #print("L'angle est {}".format(angle))
             self.player.vx = PLAYER_VELOCITY * cos(angle)
             self.player.vy = PLAYER_VELOCITY * sin(angle)
-            print(self.player.vx, self.player.vy)
+            #print(self.player.vx, self.player.vy)
 
     # If the key pressed is interesting to us, put it was pressed in a list
     def KeyPress(self,event):
         # (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
         touche = event.keysym
         if touche not in self.touches:
-            if touche == "space":
+            if touche == SHOOT_KEY:
                 self.touches.append(touche)
                 self.player.AutoShoot(self)
-            if touche in ['o', 'p', 'a', 'q']: 
-            #if touche in ['Left', 'Right']:
+            
+            # Player wants to move when in a game
+            if (self.inGame and touche in [MOVE_LEFT_KEY, MOVE_RIGHT_KEY]):
+                self.touches.append(touche)
+                self.SetPlayerSpeed()
+
+            # Player wants to move when in the menu
+            if (not(self.inGame) and touche in [MOVE_LEFT_KEY, MOVE_RIGHT_KEY, MOVE_UP_KEY, MOVE_DOWN_KEY]):
                 self.touches.append(touche)
                 self.SetPlayerSpeed()
 
@@ -120,32 +124,32 @@ class canvaSP():
     def loadLevel(self):
     # TO DO : open...
         # Save the current player coordinates if he already exists and resets the rest
-        if self.player != None:
-            (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
-            # vx,vy = self.player.vx, self.player.vy
+        # if self.player != None:
+        #     (x0,y0,x1,y1) = self.canv.coords(self.player.obj)
+        #     # vx,vy = self.player.vx, self.player.vy
 
-            self.canv.delete('all')     #DELETE TOUT LABEL
-            self.photoBG = tk.PhotoImage(file = "Background.gif")
-            self.canv.create_image(0,0, anchor = "nw", image = self.photoBG)
+        #     self.canv.delete('all')     #DELETE TOUT LABEL
+        #     self.photoBG = tk.PhotoImage(file = "Background.gif")
+        #     self.canv.create_image(0,0, anchor = "nw", image = self.photoBG)
 
-            x = (XMIN + XMAX) / 2
-            y = (YMAX - (y1-y0))
-            self.player = player.Player(self.canv, x, y, x1-x0 ,y1-y0)
+        #     x = (XMIN + XMAX) / 2
+        #     y = (YMAX - (y1-y0))
+        #     self.player = player.Player(self.canv, x, y, x1-x0 ,y1-y0)
 
-            # Définition de l'apparence du joueur
-            self.photoJoueur = tk.PhotoImage(file = PLAYER_PICPATH)
-            self.player.objImg = self.canv.create_image(x,y, anchor = "nw", image = self.photoJoueur)
-        else:
-            self.canv.delete('all')     #DELETE TOUT LABEL
-            self.photoBG = tk.PhotoImage(file = "Background.gif")
-            self.canv.create_image(0,0, anchor = "nw", image = self.photoBG)
-            self.player = player.Player(self.canv, 500,500,PLAYER_WIDTH,PLAYER_HEIGHT, vx0 = 0, vy0 = 0)
+        #     # Définition de l'apparence du joueur
+        #     self.photoJoueur = tk.PhotoImage(file = PLAYER_PICPATH)
+        #     self.player.objImg = self.canv.create_image(x,y, anchor = "nw", image = self.photoJoueur)
+        # else:
+        self.canv.delete('all')
+        self.photoBG = tk.PhotoImage(file = BCKGROUND_PICPATH)
+        self.canv.create_image(0,0, anchor = "nw", image = self.photoBG)
 
-            # Définition de l'apparence du joueur
-            self.photoJoueur = tk.PhotoImage(file = PLAYER_PICPATH)
-            self.player.objImg = self.canv.create_image(500,500, anchor = "nw", image = self.photoJoueur)
+        self.player = player.Player(self.canv, 500,500,PLAYER_WIDTH,PLAYER_HEIGHT, vx0 = 0, vy0 = 0)
+        # Définition de l'apparence du joueur
+        self.photoJoueur = tk.PhotoImage(file = PLAYER_PICPATH)
+        self.player.objImg = self.canv.create_image(500,500, anchor = "nw", image = self.photoJoueur)
         
-        self.squadron = aliens.Squadron([[True,True],[True,True]],(0,0),self.canv, vx0 = 1)
+        self.squadron = aliens.Squadron([[False,True,False],[False,True,False],[False,True,False],[True,False,True]],(0,0),self.canv, vx0 = 1)
         self.walls = [walls.Wall([[False, True, False], [True, True, True]], (100,100), self.canv)]
         self.projectiles = []
 
@@ -154,42 +158,62 @@ class canvaSP():
         # [[coll player/aliens], [coll player/aliens] ,
         # [coll murs/projectiles], [aliens/murs], [aliens/projectiles] ]
 
+        # List of the projectiles to delete after the next iteration
+        projectilesToDelete = pileFile.Pile()
 
         # For each individual projectile, checks every potential collision with player, aliens, walls
         for i, projectile in enumerate(self.projectiles):
-            
-            # With player
+            foundCollision = False #Stop checking for collisions if projectile already collided
+
+            # Collision with the player
             if collision.CollisionCheck(self, projectile, self.player):
                 self.canv.delete(self.projectiles[i].obj)
+                self.projectiles = [self.projectiles[i] for i in range(len(self.projectiles))]
                 del self.projectiles[i]
                 self.canv.delete(self.player.obj)
                 self.canv.delete(self.player.objImg)
                 del self.player
+                foundCollision = True
                 self.loadLevel()
             
-            # With aliens
-            for j in range(len(self.squadron.aliens)):
-                for k in range(len(self.squadron.aliens[0])):
-                    alien = self.squadron.aliens[j][k]
-                    if alien != None and collision.CollisionCheck(self, alien, projectile):
+            # Collision with aliens
+            if not(foundCollision):
+                for j in range(len(self.squadron.aliens)):
+                    for k in range(len(self.squadron.aliens[0])):
+                        alien = self.squadron.aliens[j][k]
+                        if alien != None and collision.CollisionCheck(self, alien, projectile):
+                            # Add the projectile to the list of projectiles to delete
+                            # and delete now from the canvas
+                            projectilesToDelete.empile()
+                            self.canv.delete(self.projectiles[i].obj)
+                            
+                            # Delete the alien shot from the list of aliens...
+                            del self.squadron.aliens[j][k]
+                            self.squadron.aliens[j][k] = None
+                            # ... and from the canvas (square and picture)
+                            self.canv.delete(self.squadron.aliens[j][k].obj)
+                            self.canv.delete(self.squadron.aliens[j][k].objImg)
+
+                            foundCollision = True # Collision found : dont check for other
+                            break
+                    else: # Escape nested for loop if inner for loop got break command
+                        continue
+                    break
+                        #if not(self.squadron.cleanSides()): #Delete the squadron is there is no more aliens in it
+                            #del self.squadron
+
+
+            # Collision with walls
+            if not(foundCollision):
+                for j, wall in enumerate(self.walls):
+                    if collision.CollisionCheck(wall, projectile):
                         self.canv.delete(self.projectiles[i].obj)
                         del self.projectiles[i]
-                        self.canv.delete(self.squadron.aliens[j][k].obj)
-                        self.canv.delete(self.squadron.aliens[j][k].objImg)
-                        #del self.squadron.aliens[j][k]
-                        self.squadron.aliens[j][k] = None
-                    #if not(self.squadron.cleanSides()): #Delete the squadron is there is no more aliens in it
-                        #del self.squadron
+                        self.canv.delete(self.walls[j].obj)
+                        del self.walls[j]
+                        break
 
-
-            # With walls from top and bottom of the wall
-            #for j, wall in enumerate(self.walls):
-                #if CollisionCheck(wall, projectile):
-                    #self.canv.delete(self.projectiles[i].obj)
-                    #del self.projectiles[i]
-                    #self.canv.delete(self.walls[j].obj)
-                    #del self.walls[j]
-
+        # Delete projectiles that collided with something
 
 
 
@@ -226,10 +250,12 @@ class canvaSP():
             self.player.Move(abs(x0),0)
         if x1 > XMAX :    # Limit right movement to the screen
             self.player.Move(XMAX - x1, 0)
-        if y0 < YMIN:     # Limit top movement to the screen
-            self.player.Move(0,abs(y0))
-        if y1 > YMAX:     # Limit bottom movement to the screen
-            self.player.Move(0, YMAX - y1)
+        # Check for 
+        if self.inGame:
+            if y0 < YMIN:     # Limit top movement to the screen
+                self.player.Move(0,abs(y0))
+            if y1 > YMAX:     # Limit bottom movement to the screen
+                self.player.Move(0, YMAX - y1)
 
         # Manage collisions between the projectiles and the screen's borders
 

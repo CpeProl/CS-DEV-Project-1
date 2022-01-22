@@ -10,7 +10,7 @@ class Player():
         self.vy = vy0
 
         self.AutoShootClock = None
-        
+
         self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  
                                             fill = None, outline = None, width =0)
         self.objImg = None
@@ -39,7 +39,7 @@ class Player():
     def Move(self,x,y, canvas):
         canvas.move(self.obj, x, y)
         canvas.move(self.objImg,x,y)
-    
+
     # Définition de l'action de tire. Change également l'apparence du joueur 
     # pendant un cours instant du tir. Potentiellement plusieurs types de tirs (To do).
     def Shoot(self, canvasObj):
