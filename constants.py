@@ -12,7 +12,7 @@ XMAX = WIDTH
 YMIN = 0
 YMAX = HEIGHT
 
-# Pics
+# BackGround Picture
 BCKGROUND_PICPATH = 'pics/background.gif'
 
 # ============= CONTROLS =============
@@ -29,8 +29,9 @@ SHOOT_KEY = 'space'
 SQUADRON_X_SPACING = 5 # in pixels
 SQUADRON_Y_SPACING = 5 # in pixels
 ALIENS_SPEED = 0.1
-SPEEDING_FACTOR = 1.1
-ALIENS_SHOOT_MAX_RATE = 500 # in ms
+SPEEDING_FACTOR = 1.05
+ALIENS_SHOOT_MIN_RATE = 300 # in ms
+ALIENS_SHOOT_MAX_RATE = 900 # in ms
 
 # ============= ALIENS =============
 
@@ -46,21 +47,29 @@ ALIENS_PICPATH = ['pics/croissant.gif',
 
 PLAYER_WIDTH = 30
 PLAYER_HEIGHT = 30
-PLAYER_VELOCITY = 1
+PLAYER_VELOCITY = 0.4
 FIRE_RATE = 1000 # in ms
-PLAYER_PICPATH = "JoueurOriPerma.gif"
+PLAYER_PICPATH = "pics/player.gif"
 
 # =========== Projectiles ============
 
-PROJECTILE_WIDTH = 10
-PROJECTILE_HEIGHT = 10
-PROJECTILE_SPEED = 1.25
+PROJECTILE_WIDTH = 2
+PROJECTILE_HEIGHT = 8
+PROJECTILE_SPEED = 0.5
+PROJECTILE_PICPATH ="pics/projectile.gif"
 
 # =========== Walls ============
 
-BLOCK_HEIGHT = 30
-BLOCK_WIDTH = 30
+BLOCK_HEIGHT = 10
+BLOCK_WIDTH = 10
 BLOCK_PICPATH = "wall.gif"
+# Colors for the blocks
+BLOCK_COLORS = ['556B2F', '808000', '6B8E23',
+                '9ACD32', '32CD32', '008000']
 
 WALL_X_SPACING = 1
 WALL_Y_SPACING = 1
+
+# =========== Credits ============
+
+CREDITS_PICPATH = 'pics/credits.gif'

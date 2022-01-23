@@ -1,14 +1,14 @@
 #from calendar import c
 from urllib.parse import _NetlocResultMixinStr
 from constants import *
-from matrixUtils import *
+import matrixUtils
 import tkinter as tk
 import projectiles
 import random
 
 
-# Similaire à Player mais en plus simple/différente sur certains points 
-# donc pas d'héritage
+# Similaire a Player mais en plus simple/differente sur certains points 
+# donc pas d'heritage
 class Alien():
     def __init__(self, x0, y0, canvas, sizex, sizey, alien_picpath):
         self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  
@@ -23,14 +23,14 @@ class Alien():
     
     def Shoot(self, canvas):
         (x0,y0,x1,y1) = canvas.coords(self.obj)
-        # # Définition de l'apparence de l'alien pendant un tir
+        # # Definition de l'apparence de l'alien pendant un tir
         # canvas.delete(self.objImg)
         # self.photoAlienTire = tk.PhotoImage(file = "AlienTire.gif")
         # self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlienTire)
         # #Reset l'apparence
         # canvas.after(400, lambda:self.ResetAppearance(canvas))
         
-        # Def coordonnées, vitesse et tir du projectile
+        # Def coordonnees, vitesse et tir du projectile
         x = (x0+x1)/2 - PROJECTILE_WIDTH/2
         y = y1
         # (vx,vy) = speedVectorCoords(PRegSpeed, angle)
@@ -45,7 +45,7 @@ class Alien():
     #     self.photoAlien = tk.PhotoImage(file = "Alien.gif")
     #     self.objImg = canvas.create_image(x0,y0, anchor = "nw", image = self.photoAlien)
 
-# Représente un groupe de plusieurs aliens. Gère le mouvement de groupe.
+# Represente un groupe de plusieurs aliens. Gere le mouvement de groupe.
 class Squadron():
     # Takes a matrix (list of lists) of booleans, that describe the aliens' squadron layout
     # and creates a list of lists of all the aliens created (True = is an alien, False = nothing there)
@@ -131,49 +131,66 @@ class Squadron():
     # Used to make the sides (left and right) of the squadron filled with at least one
     # alien, for collision purposes.
     # Returns 1 if the squadron is not empty, 0 if it is (used for deletion)
-    def CleanSides(self):
+    def CleanSides(self, canvas):
+        print(self.aliens)
         if (len(self.aliens)==0):
             return 0
         # As long as there is a column on the left that is filled with None
-        while(len(self.aliens[0]) > 0 and isEmptyCol(self.aliens, 0)):
+        while(len(self.aliens[0]) > 0 and matrixUtils.isEmptyCol(self.aliens, 0)):
             # Delete the left column (useless because no aliens on it)
-            self.aliens = delCol(self.aliens, 0)
+            self.aliens = matrixUtils.delCol(self.aliens, 0)
         # Same process on the right
-        while(len(self.aliens[0]) > 0 and isEmptyCol(self.aliens, len(self.aliens)-1)):
-            self.aliens = delCol(self.aliens, len(self.aliens)-1)
+        while(len(self.aliens[0]) > 0 and matrixUtils.isEmptyCol(self.aliens, len(self.aliens[0])-1)):
+            self.aliens = matrixUtils.delCol(self.aliens, len(self.aliens[0])-1)
 
         # If squadron non empty, change the box surrounding the pack of aliens
         if len(self.aliens[0]) > 0:
             # Change x0
             for alien in self.aliens[:][0]:
                 if alien != None:
-                    self.x0 = self.canvas.coords(alien.obj)[0]
+                    self.x0 = canvas.coords(alien.obj)[0]
                     break
             # Change y0
             for alien in self.aliens[0]:
                 if alien != None:
-                    self.y0 = self.canvas.coords(alien.obj)[1]
+                    self.y0 = canvas.coords(alien.obj)[1]
                     break
             # Change x1
             for alien in self.aliens[:][-1]:
                 if alien != None:
-                    self.x1 = self.canvas.coords(alien.obj)[2]
+                    self.x1 = canvas.coords(alien.obj)[2]
                     break
             # Change y1
             for alien in self.aliens[-1]:
                 if alien != None:
-                    self.y1 = self.canvas.coords(alien.obj)[3]
+                    self.y1 = canvas.coords(alien.obj)[3]
                     break
-
+        
+        print(self.aliens)
         return (len(self.aliens)>0)
     
-    # Pick an alien on the bottom line of the squadron
+    # Pick an alien on the bottom of each column of the squadron
     # and make him shoot, and so on..
     def AutoShoot(self, canvasObj):
+        # Make sure there are still some rows
+        if len(self.aliens) == 0:
+            return 0
+        # Make sure there is at least one alien on the bottom line of the squadron
+        while matrixUtils.isEmptyRow(self.aliens, len(self.aliens)-1):
+            self.aliens = matrixUtils.delRow(self.aliens, len(self.aliens)-1)
         aliens = [alien for alien in self.aliens[-1] if alien != None]
         alien = random.choice(aliens)
         projectile = alien.Shoot(canvasObj.canv)
-        canvasObj.projectiles.append(projectile)
+        canvasObj.projectilesAlien.append(projectile)
+
         # Another alien shoots after a period of time
         # not exceeding the ALIENS_SHOOT_MAX_RATE constant
-        self.AutoShootClock = canvasObj.canv.after(random.randint(0,ALIENS_SHOOT_MAX_RATE), lambda: self.AutoShoot(canvasObj))
+        self.AutoShootClock = canvasObj.canv.after(random.randint(ALIENS_SHOOT_MIN_RATE,ALIENS_SHOOT_MAX_RATE), lambda: self.AutoShoot(canvasObj))
+
+    # Returns true if the squadron contains no alien
+    def isEmpty(self):
+        for row in self.aliens:
+            for alien in row:
+                if alien != None:
+                    return False
+        return True
