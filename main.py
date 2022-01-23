@@ -59,6 +59,7 @@ class canvaSP():
         # Permet de potentiellement call un niveau en particulier. Un seul niveau existe içi.
         self.currentLevel = 0
         self.levels = ['level1']
+        
         self.loadLevel()
 
         # Lancer la boucle de check des collisions
