@@ -1,4 +1,5 @@
 #from calendar import c
+from urllib.parse import _NetlocResultMixinStr
 from constants import *
 from matrixUtils import *
 import tkinter as tk
@@ -9,7 +10,7 @@ import random
 # Similaire à Player mais en plus simple/différente sur certains points 
 # donc pas d'héritage
 class Alien():
-    def __init__(self, x0, y0, canvas, sizex, sizey, alien_picpath, vx0=0, vy0=0 ):
+    def __init__(self, x0, y0, canvas, sizex, sizey, alien_picpath):
         self.obj  = canvas.create_rectangle(x0 , y0 , x0 + sizex , y0 + sizey,  
                                             fill = None, outline = None, width =0)
         self.photoAlien = tk.PhotoImage(file = alien_picpath)
@@ -34,8 +35,8 @@ class Alien():
         y = y1
         # (vx,vy) = speedVectorCoords(PRegSpeed, angle)
         (vx, vy) = 0, PROJECTILE_SPEED
-        projectile = projectiles.Projectile(self.canvas, x, y, PROJECTILE_WIDTH, PROJECTILE_HEIGHT, vx, vy)
-        canvas.projectiles.append(projectile)
+        projectile = projectiles.Projectile(canvas, x, y, PROJECTILE_WIDTH, PROJECTILE_HEIGHT, vx, vy)
+        return projectile
     
     # # Reset the appearance of the objet. Called after every shoot
     # def ResetAppearance(self, canvas):
@@ -48,15 +49,22 @@ class Alien():
 class Squadron():
     # Takes a matrix (list of lists) of booleans, that describe the aliens' squadron layout
     # and creates a list of lists of all the aliens created (True = is an alien, False = nothing there)
-    def __init__(self, genMatrix, startPoint, canvas, vx0=0, vy0=0):
+    def __init__(self, genMatrix, startPoint, canvasObj, vx0=ALIENS_SPEED, vy0=0):
         # Make sure there is something to draw
         assert len(genMatrix) > 0 and len(genMatrix[0]) > 0
+        canvas = canvasObj.canv
 
+        # Coordinates of the envelope of the squadron
         self.x0 = startPoint[0]
         self.y0 = startPoint[1]
         self.vx = vx0
         self.vy = vy0
 
+        # Constant containing the future id of the tk.after loop
+        # to make the alien squadron fire
+        self.AutoShootClock = None
+
+        # Create the matrix of aliens
         self.rows, self.cols = len(genMatrix), len(genMatrix[0])
         self.aliens = [[None for j in range(self.cols)] for i in range(self.rows)]
         for row in range(self.rows):
@@ -65,26 +73,30 @@ class Squadron():
                     x, y = col * (ALIEN_WIDTH + SQUADRON_X_SPACING), row * (ALIEN_HEIGHT + SQUADRON_Y_SPACING)
                     # Create an alien with a random picture, to choose from all the available ones
                     alien_picpath = random.choice(ALIENS_PICPATH)
-                    self.aliens[row][col] = Alien(x, y, canvas, ALIEN_WIDTH, ALIEN_HEIGHT, alien_picpath, vx0=vx0)
+                    self.aliens[row][col] = Alien(x, y, canvas, ALIEN_WIDTH, ALIEN_HEIGHT, alien_picpath)
                 else: # No alien to place there
                     self.aliens[row][col] = None
         
+        # Coordinates of the envelope of the squadron
         self.x1 = startPoint[0] + self.cols * ALIEN_WIDTH + (self.cols - 1) * SQUADRON_X_SPACING
         self.y1 = startPoint[1] + self.rows * ALIEN_HEIGHT + (self.rows - 1) * SQUADRON_Y_SPACING
+
+        # Make the squadron begin to shoot in repetition
+        self.AutoShoot(canvasObj)
 
     def UpdatePositionOnCanvas(self, canvas):
         dx,dy = self.vx * PERIOD, self.vy * PERIOD
 
         # Check potential collisions with the screen (left and right)
         if (self.x0 + dx < XMIN):
-            # Go reverse
-            dx, self.vx = 0, abs(self.vx)
+            # Go reverse and speed up
+            dx, self.vx = 0, abs(self.vx) * SPEEDING_FACTOR
             # And move down
             self.Move(0, ALIEN_HEIGHT, canvas)
 
         if (self.x1 + dx > XMAX):
             # Go reverse
-            dx, self.vx = 0, -abs(self.vx)
+            dx, self.vx = 0, -abs(self.vx) * SPEEDING_FACTOR
             # And move down
             self.Move(0, ALIEN_HEIGHT, canvas)
         
@@ -154,3 +166,14 @@ class Squadron():
                     break
 
         return (len(self.aliens)>0)
+    
+    # Pick an alien on the bottom line of the squadron
+    # and make him shoot, and so on..
+    def AutoShoot(self, canvasObj):
+        aliens = [alien for alien in self.aliens[-1] if alien != None]
+        alien = random.choice(aliens)
+        projectile = alien.Shoot(canvasObj.canv)
+        canvasObj.projectiles.append(projectile)
+        # Another alien shoots after a period of time
+        # not exceeding the ALIENS_SHOOT_MAX_RATE constant
+        self.AutoShootClock = canvasObj.canv.after(random.randint(0,ALIENS_SHOOT_MAX_RATE), lambda: self.AutoShoot(canvasObj))

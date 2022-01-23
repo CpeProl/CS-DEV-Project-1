@@ -149,7 +149,7 @@ class canvaSP():
         self.photoJoueur = tk.PhotoImage(file = PLAYER_PICPATH)
         self.player.objImg = self.canv.create_image(500,500, anchor = "nw", image = self.photoJoueur)
         
-        self.squadron = aliens.Squadron([[False,True,False],[False,True,False],[False,True,False],[True,False,True]],(0,0),self.canv, vx0 = 1)
+        self.squadron = aliens.Squadron([[False,True,False],[False,True,False],[False,True,False],[True,False,True]],(0,0),self)
         self.walls = [walls.Wall([[False, True, False], [True, True, True]], (100,100), self.canv)]
         self.projectiles = []
 

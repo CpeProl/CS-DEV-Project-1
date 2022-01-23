@@ -28,6 +28,9 @@ SHOOT_KEY = 'space'
 
 SQUADRON_X_SPACING = 5 # in pixels
 SQUADRON_Y_SPACING = 5 # in pixels
+ALIENS_SPEED = 0.1
+SPEEDING_FACTOR = 1.1
+ALIENS_SHOOT_MAX_RATE = 500 # in ms
 
 # ============= ALIENS =============
 
@@ -44,7 +47,7 @@ ALIENS_PICPATH = ['pics/croissant.gif',
 PLAYER_WIDTH = 30
 PLAYER_HEIGHT = 30
 PLAYER_VELOCITY = 1
-FIRE_RATE = 500 # in ms
+FIRE_RATE = 1000 # in ms
 PLAYER_PICPATH = "JoueurOriPerma.gif"
 
 # =========== Projectiles ============
